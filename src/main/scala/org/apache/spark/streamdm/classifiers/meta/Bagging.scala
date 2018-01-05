@@ -18,13 +18,13 @@
 package org.apache.spark.streamdm.classifiers.meta
 
 import java.util.Random
-import com.github.javacliparser.{ClassOption, IntOption}
+
 import org.apache.spark.streamdm.classifiers.Classifier
 import org.apache.spark.streamdm.classifiers.model._
 import org.apache.spark.streamdm.core._
-import org.apache.spark.streaming.dstream._
-import org.apache.spark.streamdm.utils.Utils
 import org.apache.spark.streamdm.core.specification.ExampleSpecification
+import org.apache.spark.streamdm.utils.Utils
+import org.apache.spark.streaming.dstream._
 
 /**
   * The Bagging classifier trains an ensemble of classifier to improve performance.
@@ -37,19 +37,13 @@ import org.apache.spark.streamdm.core.specification.ExampleSpecification
   * </ul>
   */
 
-class Bagging extends Classifier {
+class Bagging(val baseClassifier: Classifier, val ensembleSize: Int) extends Classifier {
 
   type T = LinearModel
 
-  val baseClassifierOption: ClassOption = new ClassOption("baseClassifier", 'l',
-    "Base Classifier to use", classOf[Classifier], "trees.HoeffdingTree")
+  var classifiers: Array[Classifier] = _
 
-  val ensembleSizeOption: IntOption = new IntOption("ensembleSize", 's',
-    "The number of models in the bag.", 10, 1, Integer.MAX_VALUE)
-
-  var classifiers: Array[Classifier] = null
-
-  var exampleLearnerSpecification: ExampleSpecification = null
+  var exampleLearnerSpecification: ExampleSpecification = _
 
   val classifierRandom: Random = new Random()
 
@@ -61,8 +55,8 @@ class Bagging extends Classifier {
     exampleLearnerSpecification = exampleSpecification
 
     //Create the learner members of the ensemble
-    val baseClassifier: Classifier = baseClassifierOption.getValue()
-    val sizeEnsemble = ensembleSizeOption.getValue
+    val baseClassifier: Classifier = baseClassifier
+    val sizeEnsemble = ensembleSize
     classifiers = new Array[Classifier](sizeEnsemble)
 
     for (i <- 0 until sizeEnsemble) {
@@ -77,7 +71,7 @@ class Bagging extends Classifier {
      * @return the updated Model
      */
   override def train(input: DStream[Example]): Unit = {
-    for (i <- 0 until ensembleSizeOption.getValue) {
+    for (i <- 0 until ensembleSize) {
       classifiers(i).train(input.map(onlineSampling))
     }
 
@@ -109,16 +103,16 @@ class Bagging extends Classifier {
    * @return the predicted value
    */
   def ensemblePredict(example: Example): Double = {
-    val sizeEnsemble = ensembleSizeOption.getValue
+    val sizeEnsemble = ensembleSize
     val predictions: Array[Double] = new Array(sizeEnsemble)
     for (i <- 0 until sizeEnsemble) {
       predictions(i) = classifiers(i).getModel.asInstanceOf[ClassificationModel].predict(example)
     }
-    Utils.majorityVote(predictions, numberClasses)
+    Utils.majorityVote(predictions, numberClasses())
   }
 
   def numberClasses(): Integer = {
     if (exampleLearnerSpecification == null) 2
-    else exampleLearnerSpecification.out(0).range
+    else exampleLearnerSpecification.out(0).range()
   }
 }
