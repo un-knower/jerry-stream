@@ -135,7 +135,7 @@ object ExampleParser extends Logging {
   def instanceToArff(instance: Instance, insSpec: InstanceSpecification, startIndex: Int): String = {
     val isSparse = instance.isInstanceOf[SparseInstance]
     val sb = new StringBuffer()
-    instance.getFeatureIndexArray().foreach(token => {
+    instance.getFeatureIndexArray.foreach(token => {
       if (isSparse) {
         sb.append(startIndex + token._2 + " ")
       }

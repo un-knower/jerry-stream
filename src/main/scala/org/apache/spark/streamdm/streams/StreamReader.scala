@@ -41,5 +41,5 @@ abstract class StreamReader extends Configurable {
     *
     * @return an ExampleSpecification of the features
     */
-  def getExampleSpecification(): ExampleSpecification
+  def getExampleSpecification: ExampleSpecification
 }

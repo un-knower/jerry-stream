@@ -31,7 +31,7 @@ class PrintStreamWriter extends StreamWriter {
     *
     * @param stream a DStream of Strings for which the output is processed
     */
-  def output(stream: DStream[String]) = {
+  def output(stream: DStream[String]): Unit = {
     stream.foreachRDD(rdd => {
       rdd.collect().foreach(x => println(x))
     })
@@ -42,5 +42,5 @@ class PrintStreamWriter extends StreamWriter {
     *
     * @param text
     */
-  override def output(text: String) = println(text)
+  override def output(text: String): Unit = println(text)
 }

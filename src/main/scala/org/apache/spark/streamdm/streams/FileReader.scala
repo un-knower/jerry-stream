@@ -43,52 +43,36 @@ import org.apache.spark.streamdm.core.specification._
   * </ul>
   */
 
-class FileReader extends StreamReader with Logging {
-
-  val chunkSizeOption: IntOption = new IntOption("chunkSize", 'k',
-    "Chunk Size", 10000, 1, Integer.MAX_VALUE)
-
-  val slideDurationOption: IntOption = new IntOption("slideDuration", 'd',
-    "Slide Duration in milliseconds", 100, 1, Integer.MAX_VALUE)
-
-  val instanceOption: StringOption = new StringOption("instanceType", 't',
-    "Type of the instance to use", "dense")
-
-  val instanceLimitOption: IntOption = new IntOption("instanceLimit", 'i',
-    "Limit of number of instance", 100000, 1, Integer.MAX_VALUE)
-
-  val fileNameOption: StringOption = new StringOption("fileName", 'f',
-    "File Name", "../data/hyperplanesampledata")
-
-  val dataHeadTypeOption: StringOption = new StringOption("dataHeadType", 'h',
-    "Data Head Format", "arff")
+class FileReader(val chunkSize: Int
+                 , val slideDurationOpt: Int
+                 , val instance: String
+                 , val instanceLimit: Int
+                 , val fileName: String
+                 , val dataHeadType: String) extends StreamReader with Logging {
 
   val headParser = new SpecificationParser
-  var fileName: String = null
-  var headFileName: String = null
+  var headFileName: String = _
   var isInited: Boolean = false
   var hasHeadFile: Boolean = false
-  var lines: Iterator[String] = null
-  var spec: ExampleSpecification = null
+  var lines: Iterator[String] = _
+  var spec: ExampleSpecification = _
   var counter: Int = 0
 
   def init() {
     if (!isInited) {
-      fileName = fileNameOption.getValue
       val file = new File(fileName)
       if (!file.exists()) {
         logError("file does not exists, input a new file name")
         sys.exit()
       }
-      headFileName = fileNameOption.getValue() + "." +
-        dataHeadTypeOption.getValue + ".head"
+      headFileName = fileName + "." + dataHeadType + ".head"
       val hfile: File = new File(headFileName)
       if (hfile.exists()) {
         // has a head file
         hasHeadFile = true
       }
       spec = headParser.getSpecification(
-        if (hasHeadFile) headFileName else fileName, dataHeadTypeOption.getValue)
+        if (hasHeadFile) headFileName else fileName, dataHeadType)
       for (index <- 0 until spec.out(0).range()) {
         logInfo(spec.out(0).asInstanceOf[NominalFeatureSpecification](index))
       }
@@ -112,7 +96,7 @@ class FileReader extends StreamReader with Logging {
     *
     * @return an Example
     */
-  def getExampleFromFile(): Example = {
+  def getExampleFromFile: Example = {
     var exp: Example = null
     // start to read file from its beginning.
     if (lines == null || !lines.hasNext) {
@@ -129,18 +113,18 @@ class FileReader extends StreamReader with Logging {
       line = lines.next()
     }
     if (!hasHeadFile) {
-      if ("arff".equalsIgnoreCase(dataHeadTypeOption.getValue())) {
+      if ("arff".equalsIgnoreCase(dataHeadType)) {
         exp = ExampleParser.fromArff(line, spec)
       } else {
-        if ("csv".equalsIgnoreCase(dataHeadTypeOption.getValue())) {
+        if ("csv".equalsIgnoreCase(dataHeadType)) {
           //for the csv format, we assume the first is the classification
           val index: Int = line.indexOf(",")
           line = line.substring(0, index) + " " + line.substring(index + 1).trim()
-          exp = Example.parse(line, instanceOption.getValue, "dense")
+          exp = Example.parse(line, instance, "dense")
         }
       }
     } else {
-      exp = Example.parse(line, instanceOption.getValue, "dense")
+      exp = Example.parse(line, instance, "dense")
     }
     exp
   }
@@ -163,11 +147,11 @@ class FileReader extends StreamReader with Logging {
       }
 
       override def compute(validTime: Time): Option[RDD[Example]] = {
-        val examples: Array[Example] = Array.fill[Example](chunkSizeOption.getValue)(getExampleFromFile())
+        val examples: Array[Example] = Array.fill[Example](chunkSize)(getExampleFromFile)
         val examplesRDD = ssc.sparkContext.parallelize(examples)
         // stop the stream when it gets over N instances.
         counter = counter + 1
-        val limit = instanceLimitOption.getValue / chunkSizeOption.getValue
+        val limit = instanceLimit / chunkSize
         if (counter > limit) {
           logInfo("Over limit instances. STOP!")
           ssc.stop(stopSparkContext = false, stopGracefully = false)
@@ -175,8 +159,8 @@ class FileReader extends StreamReader with Logging {
         Some(examplesRDD)
       }
 
-      override def slideDuration = {
-        new Duration(slideDurationOption.getValue)
+      override def slideDuration: Duration = {
+        Duration(slideDurationOpt)
       }
     }
   }

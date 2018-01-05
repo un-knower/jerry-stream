@@ -258,7 +258,6 @@ object Statistics {
   /**
     * Returns natural logarithm of gamma function.
     *
-    * @param x the value
     * @return natural logarithm of gamma function
     */
   def lnGamma(what: Double): Double = {
@@ -364,7 +363,6 @@ object Statistics {
     * <A HREF="http://people.ne.mediaone.net/moshier/index.html#Cephes">Cephes 2.2</A>
     * Math Library (C).
     *
-    * @param a the argument to the function.
     */
   def errorFunction(x: Double): Double = {
     var y: Double = 0.0
@@ -581,7 +579,7 @@ object Statistics {
           ans += c
         } while (c / ans > MACHEP)
 
-        (ans * ax / a)
+        ans * ax / a
       }
     }
   }
@@ -795,7 +793,7 @@ object Statistics {
           a = bb
           b = aa
           xc = xx
-          x = w;
+          x = w
         } else {
           a = aa
           b = bb
@@ -878,7 +876,7 @@ object Statistics {
     var ans = 1.0
     var r = 1.0
     var n = 0
-    var thresh = 3.0 * MACHEP
+    val thresh = 3.0 * MACHEP
     do {
       xk = -(x * k1 * k2) / (k3 * k4)
       pk = pkm1 + pkm2 * xk
@@ -951,11 +949,11 @@ object Statistics {
     var qkm2 = 1.0
     var pkm1 = 1.0
     var qkm1 = 1.0
-    var z = x / (1.0 - x)
+    val z = x / (1.0 - x)
     var ans = 1.0
     var r = 1.0
     var n = 0
-    var thresh = 3.0 * MACHEP
+    val thresh = 3.0 * MACHEP
     do {
       xk = -(z * k1 * k2) / (k3 * k4)
       pk = pkm1 + pkm2 * xk

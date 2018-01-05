@@ -34,17 +34,9 @@ import org.apache.spark.streamdm.core.specification.ExampleSpecification
   * <li> Instance type (<b>-t</b>), either <i>dense</i> or <i>sparse</i>
   * </ul>
   */
-class SocketTextStreamReader extends StreamReader {
-
-  val portOption: IntOption = new IntOption("port", 'p',
-    "Socket port", 9999, 0, Integer.MAX_VALUE)
-
-  val hostOption: StringOption = new StringOption("host", 'h', "Host",
-    "localhost")
-
-  val instanceOption: StringOption = new StringOption("instanceType", 't',
-    "Type of the instance to use", "dense")
-
+class SocketTextStreamReader(val port: Int
+                             , val host: String
+                             , val instance: String) extends StreamReader {
   /**
     * Obtains a stream of examples.
     *
@@ -53,11 +45,11 @@ class SocketTextStreamReader extends StreamReader {
     */
   def getExamples(ssc: StreamingContext): DStream[Example] = {
     //stream is a localhost socket stream
-    val text = ssc.socketTextStream(hostOption.getValue, portOption.getValue)
+    val text = ssc.socketTextStream(host, port)
     //transform stream into stream of instances
     //instances come as whitespace delimited lines, where the first item is the
     //instance of the label(s) and the second is the instance of the features
-    text.map(x => Example.parse(x, instanceOption.getValue, "dense"))
+    text.map(x => Example.parse(x, instance, "dense"))
   }
 
   /**

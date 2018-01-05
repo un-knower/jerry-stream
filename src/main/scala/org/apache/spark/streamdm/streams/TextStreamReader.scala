@@ -34,13 +34,8 @@ import org.apache.spark.streamdm.core.specification.ExampleSpecification
   * <li> Instance type (<b>-t</b>), either <i>dense</i> or <i>sparse</i>
   * </ul>
   */
-class TextStreamReader extends StreamReader {
-
-  val fileOption: StringOption = new StringOption("file", 'f',
-    "Directory where the files are", ".")
-
-  val instanceOption: StringOption = new StringOption("instanceType", 't',
-    "Type of the instance to use", "dense")
+class TextStreamReader(val file: String
+                       , val instance: String) extends StreamReader {
 
   /**
     * Obtains a stream of examples.
@@ -50,11 +45,11 @@ class TextStreamReader extends StreamReader {
     */
   def getExamples(ssc: StreamingContext): DStream[Example] = {
     //stream is a localhost socket stream
-    val text = ssc.textFileStream(fileOption.getValue)
+    val text = ssc.textFileStream(file)
     //transform stream into stream of instances
     //instances come as whitespace delimited lines, where the first item is the
     //instance of the label(s) and the second is the instance of the features
-    text.map(x => Example.parse(x, instanceOption.getValue, "dense"))
+    text.map(x => Example.parse(x, instance, "dense"))
   }
 
   /**
@@ -62,6 +57,6 @@ class TextStreamReader extends StreamReader {
     *
     * @return an ExampleSpecification of the features
     */
-  def getExampleSpecification(): ExampleSpecification = new ExampleSpecification(
+  def getExampleSpecification: ExampleSpecification = new ExampleSpecification(
     new InstanceSpecification(), new InstanceSpecification())
 }

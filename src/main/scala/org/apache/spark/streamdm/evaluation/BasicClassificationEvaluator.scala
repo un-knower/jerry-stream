@@ -19,11 +19,9 @@ package org.apache.spark.streamdm.evaluation
 
 import java.io.Serializable
 
-import com.github.javacliparser.FlagOption
 import org.apache.spark.internal.Logging
-import org.apache.spark.streamdm.core.specification.ExampleSpecification
-import com.github.javacliparser.FloatOption
 import org.apache.spark.streamdm.core.Example
+import org.apache.spark.streamdm.core.specification.ExampleSpecification
 import org.apache.spark.streaming.dstream.DStream
 
 /**
@@ -44,16 +42,10 @@ import org.apache.spark.streaming.dstream.DStream
   * <li> supressConfusionMatrix (<b>-m</b>), when true prevent output of the confusion matrix
   * </ul>
   */
-class BasicClassificationEvaluator extends Evaluator with Logging {
+class BasicClassificationEvaluator(val beta: Double
+                                   , val supressPerClassMetrics: Boolean
+                                   , val supressConfusionMatrix: Boolean) extends Evaluator with Logging {
 
-  val betaOption = new FloatOption("beta", 'b',
-    "Beta value for fbeta-score calculation.", 1.0, Double.MinValue, Double.MaxValue)
-
-  val supressPerClassMetricsOption = new FlagOption("supressPerClassMetrics",
-    'c', "Do not output the per class precision and recall for multi-class problems.")
-
-  val supressConfusionMatrixOption = new FlagOption("supressConfusionMatrix",
-    'm', "Do not output the confusion matrix.")
 
   override def setExampleSpecification(exampleSpecification: ExampleSpecification): Unit = {
     exampleLearnerSpecification = exampleSpecification
@@ -127,8 +119,8 @@ class BasicClassificationEvaluator extends Evaluator with Logging {
     } + confMat {
       "fp"
     })
-    val f_beta_score = (1 + scala.math.pow(this.betaOption.getValue(), 2)) * ((precision * recall) /
-      ((scala.math.pow(this.betaOption.getValue(), 2) * precision) + recall))
+    val f_beta_score = (1 + scala.math.pow(this.beta, 2)) * ((precision * recall) /
+      ((scala.math.pow(this.beta, 2) * precision) + recall))
 
     "%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.0f,%.0f,%.0f,%.0f".format(timeTaken, accuracy, recall, precision, f_beta_score, specificity,
       confMat {
@@ -159,19 +151,19 @@ class BasicClassificationEvaluator extends Evaluator with Logging {
     // Ignore NaN values while calculating the macro average recall and precision.
     val recallMacro = recallPerClass.filter(!_.isNaN()).reduce((v, k) => v + k) / (numClasses - recallPerClass.count(_.isNaN))
     val precisionMacro = precisionPerClass.filter(!_.isNaN()).reduce((v, k) => v + k) / (numClasses - precisionPerClass.count(_.isNaN))
-    val squaredBeta = scala.math.pow(this.betaOption.getValue(), 2)
+    val squaredBeta = scala.math.pow(this.beta, 2)
     // Avoid division by zero in fscore
     val fscoreMacro = if ((squaredBeta * precisionMacro + recallMacro) != 0) ((squaredBeta + 1) * precisionMacro * recallMacro) / (squaredBeta * precisionMacro + recallMacro) else 0.0
 
     var output = "%.3f,%.3f,%.3f,%.3f,%.3f,".format(timeTaken, accuracy, recallMacro, precisionMacro, fscoreMacro)
 
-    if (!this.supressPerClassMetricsOption.isSet()) {
+    if (!supressPerClassMetrics) {
       val strRecallPerClass = recallPerClass.foldLeft("")((r: String, c: Double) => r + "%.4f,".format(c))
       val strPrecisionPerClass = precisionPerClass.foldLeft("")((r: String, c: Double) => r + "%.4f,".format(c))
       output += "%s%s".format(strRecallPerClass, strPrecisionPerClass)
     }
 
-    if (!this.supressConfusionMatrixOption.isSet()) {
+    if (!supressConfusionMatrix) {
       output += "%s".format(confMat.map(x => "(%d %d)=%.1f".format(x._1._1, x._1._2, x._2)).mkString(","))
     }
     output
@@ -213,7 +205,7 @@ class BasicClassificationEvaluator extends Evaluator with Logging {
     */
   def calculatePrecisionMultiClass(confMat: Map[(Int, Int), Double]): Array[Double] = {
     val numClasses = exampleLearnerSpecification.outputFeatureSpecification(0).range
-    var precisionPerClassIndex = Array.fill(numClasses) {
+    val precisionPerClassIndex = Array.fill(numClasses) {
       0.0
     }
 
@@ -242,16 +234,16 @@ class BasicClassificationEvaluator extends Evaluator with Logging {
   override def header(): String = {
     val numClasses = exampleLearnerSpecification.outputFeatureSpecification(0).range
     if (numClasses == 2) {
-      "Runtime,Accuracy,Recall,Precision,F(beta=%.1f)-score,Specificity,TP,FN,FP,TN".format(this.betaOption.getValue())
+      "Runtime,Accuracy,Recall,Precision,F(beta=%.1f)-score,Specificity,TP,FN,FP,TN".format(this.beta)
     }
     else {
-      var output = "Runtime,Accuracy,Recall-avg-macro,Precision-avg-macro,F(beta=%.1f)-score-avg-macro,".format(this.betaOption.getValue())
-      if (!this.supressPerClassMetricsOption.isSet()) {
+      var output = "Runtime,Accuracy,Recall-avg-macro,Precision-avg-macro,F(beta=%.1f)-score-avg-macro,".format(this.beta)
+      if (!this.supressPerClassMetrics) {
         val perClassRecall = Range(0, numClasses).foldLeft("")((s, i) => s + "Recall(" + i + "),")
         val perClassPrecision = Range(0, numClasses).foldLeft("")((s, i) => s + "Precision(" + i + "),")
         output += perClassRecall + perClassPrecision
       }
-      if (!this.supressConfusionMatrixOption.isSet()) {
+      if (!this.supressConfusionMatrix) {
         output += "ConfusionMatrix(predicted ground-truth)"
       }
       output

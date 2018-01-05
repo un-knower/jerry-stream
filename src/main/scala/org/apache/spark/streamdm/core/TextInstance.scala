@@ -148,7 +148,7 @@ case class TextInstance(inFeatures: Map[String, Double])
 
   private def dotTupleArrays(l1: Array[(String, Double)],
                              l2: Array[(String, Double)]): Double =
-    (l1 ++ l2).groupBy(_._1).filter { case (k, v) => v.length == 2 }.
+    (l1 ++ l2).groupBy(_._1).filter { case (_, v) => v.length == 2 }.
       map { case (k, v) => (k, v.map(_._2).product) }.toArray.unzip._2.sum
 
   private def addTupleArrays(l1: Array[(String, Double)],

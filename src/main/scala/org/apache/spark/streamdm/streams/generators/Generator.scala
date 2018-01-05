@@ -28,7 +28,7 @@ abstract class Generator extends StreamReader {
   /**
     * returns chunk size
     */
-  def getChunkSize(): Int
+  def getChunkSize: Int
 
   /**
     * returns slide duration
@@ -70,8 +70,8 @@ abstract class Generator extends StreamReader {
         Some(ssc.sparkContext.parallelize(getExamples()))
       }
 
-      override def slideDuration = {
-        new Duration(getslideDuration)
+      override def slideDuration: Duration = {
+        Duration(getslideDuration())
       }
     }
   }
@@ -82,7 +82,7 @@ abstract class Generator extends StreamReader {
     * @param length size of the array; default chunkSizeOption.getValue
     * @return an array of Examples
     */
-  def getExamples(length: Int = getChunkSize()): Array[Example] = {
+  def getExamples(length: Int = getChunkSize): Array[Example] = {
     init()
     Array.fill[Example](length)(getExample())
   }

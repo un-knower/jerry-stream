@@ -33,50 +33,42 @@ import org.apache.spark.streamdm.core.specification.ExampleSpecification
   * </ul>
   */
 
-class HyperplaneGenerator extends Generator {
-
-  val chunkSizeOption: IntOption = new IntOption("chunkSize", 'k',
-    "Chunk Size", 1000, 1, Integer.MAX_VALUE)
-
-  val slideDurationOption: IntOption = new IntOption("slideDuration", 'd',
-    "Slide Duration in milliseconds", 1000, 1, Integer.MAX_VALUE)
-
-  val numFeaturesOption: IntOption = new IntOption("numFeatures", 'f',
-    "Number of Features", 3, 1, Integer.MAX_VALUE)
-
+class HyperplaneGenerator(val chunkSize: Int
+                          , val slideDuration: Int
+                          , val numFeatures: Int) extends Generator {
   /**
     * returns chunk size
     */
   override def getChunkSize(): Int = {
-    chunkSizeOption.getValue
+    chunkSize
   }
 
   /**
     * returns slide duration
     */
   override def getslideDuration(): Int = {
-    slideDurationOption.getValue
+    slideDuration
   }
 
   def init(): Unit = {}
 
   def getExample(): Example = {
     val inputInstance = new DenseInstance(Array.fill[Double](
-      numFeaturesOption.getValue)(5.0 * getRandomNumber()))
+      numFeatures)(5.0 * getRandomNumber))
     val noiseInstance = new DenseInstance(Array.fill[Double](
-      numFeaturesOption.getValue)(getNoise()))
+      numFeatures)(getNoise))
     new Example(inputInstance.add(noiseInstance), new DenseInstance(
       Array.fill[Double](1)(label(inputInstance))))
   }
 
-  def getRandomNumber(): Double = 2.0 * Random.nextDouble() - 1.0
+  def getRandomNumber: Double = 2.0 * Random.nextDouble() - 1.0
 
-  def getNoise(): Double = 0.5 * Random.nextGaussian()
+  def getNoise: Double = 0.5 * Random.nextGaussian()
 
   val weight = new DenseInstance(Array.fill[Double](
-    numFeaturesOption.getValue)(getRandomNumber()))
+    numFeatures)(getRandomNumber))
 
-  val bias: Double = getRandomNumber()
+  val bias: Double = getRandomNumber
 
   def label(inputInstance: Instance): Double = {
     val sum = weight.dot(inputInstance)
@@ -98,7 +90,7 @@ class HyperplaneGenerator extends Generator {
 
     //Prepare specification of input attributes
     val inputIS = new InstanceSpecification()
-    for (i <- 0 until numFeaturesOption.getValue)
+    for (i <- 0 until numFeatures)
       inputIS.addFeatureSpecification(i, "NumericFeature" + i)
 
     new ExampleSpecification(inputIS, outputIS)

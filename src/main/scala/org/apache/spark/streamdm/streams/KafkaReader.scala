@@ -30,20 +30,15 @@ import org.apache.spark.streaming.kafka.KafkaUtils
   *
   * <p>It uses the following options:
   * <ul>
-  *  <li> kafka brokers (<b>-b</b>)
-  *  <li> kafka topics (<b>-p</b>)
-  *  <li> Instance type (<b>-t</b>), either <i>dense</i> or <i>sparse</i>
+  * <li> kafka brokers (<b>-b</b>)
+  * <li> kafka topics (<b>-p</b>)
+  * <li> Instance type (<b>-t</b>), either <i>dense</i> or <i>sparse</i>
   * </ul>
   */
-class KafkaReader extends StreamReader{
-
-  /** kafka brokers */
-  val brokersOption: StringOption = new StringOption("brokers", 'b', "kafka brokers", "unset")
-  /** topics name */
-  val topicsOption: StringOption = new StringOption("topics", 'p', "topics name", "unset")
-  /** data format*/
-  val instanceOption: StringOption = new StringOption("instanceType", 't', "Type of the instance to use", "dense")
-
+class KafkaReader(val brokers: String
+                  , val topics: String
+                  , val instance: String
+                  , kafkaParams: Map[String, String]) extends StreamReader {
   /**
     * Obtains a stream of examples.
     *
@@ -51,17 +46,15 @@ class KafkaReader extends StreamReader{
     * @return a stream of Examples
     */
   override def getExamples(ssc: StreamingContext): DStream[Example] = {
-    val brokers = brokersOption.getValue
-    val topics = topicsOption.getValue
 
-    assert(!(brokers+topics).contains("unset"),"brokers or topics should be set")
+    assert(!(brokers + topics).contains("unset"), "brokers or topics should be set")
 
-    val kafkaParams = Map[String, String]("metadata.broker.list" -> brokers)
+    val kafkaParamsAll: Map[String, String] = Map[String, String]("metadata.broker.list" -> brokers)
+    kafkaParams.foreach(t2 => kafkaParamsAll + t2)
     val topicMap = topics.split(",").toSet
 
-    KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](ssc,kafkaParams,topicMap)
-      .map(x=>Example.parse(x._2, instanceOption.getValue, "dense"))
-
+    KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](ssc, kafkaParamsAll, topicMap)
+      .map(x => Example.parse(x._2, instance, "dense"))
   }
 
   /**

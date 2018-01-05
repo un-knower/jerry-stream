@@ -16,7 +16,7 @@
  */
 package org.apache.spark.streamdm.streams.generators
 
-import com.github.javacliparser.{ IntOption, FloatOption, FlagOption }
+import com.github.javacliparser.{IntOption, FloatOption, FlagOption}
 import org.apache.spark.streamdm.core._
 import org.apache.spark.streamdm.core.specification._
 import scala.collection.mutable.ArrayBuffer
@@ -25,30 +25,30 @@ import scala.math._
 import org.apache.spark.streamdm.core.specification.ExampleSpecification
 
 /**
- * RandomRBFEventsGenerator generates data stream for Clustream  via a random radial basis function.
- *
- * <p>It uses the following options:
- * <ul>
- *  <li> Chunk size (<b>-k</b>)
- *  <li> Slide duration (<b>-d</b>)
- *  <li> Seed for random generation of model (<b>-m</b>)
- *  <li> Seed for random generation of instances (<b>-i</b>)
- *  <li> The average number of centroids in the model (<b>-C</b>)
- *  <li> Deviation of the number of centroids in the model (<b>-c</b>)
- *  <li> The average radii of the centroids in the model (<b>-R</b>)
- *  <li> Deviation of average radii of the centroids in the model (<b>-r</b>)
- *  <li> Offset of the average weight a cluster has(<b>-D</b>)
- *  <li> Kernels move a predefined distance of 0.01 every X points (<b>-V</b>)
- *  <li> Speed/Velocity point offset (<b>-v</b>)
- *  <li> Noise level (<b>-N</b>)
- *  <li> Allow noise to be placed within a cluster(<b>-n</b>)
- *  <li> Event frequency (<b>-E</b>)
- *  <li> Enable merging and splitting of clusters(<b>-M</b>)
- *  <li> Enable emerging and disappearing of clusters (<b>-e</b>)
- *  <li> The number of features to generate (<b>-f</b>)
- *  <li> Decay horizon (<b>-h</b>)
- * </ul>
- */
+  * RandomRBFEventsGenerator generates data stream for Clustream  via a random radial basis function.
+  *
+  * <p>It uses the following options:
+  * <ul>
+  * <li> Chunk size (<b>-k</b>)
+  * <li> Slide duration (<b>-d</b>)
+  * <li> Seed for random generation of model (<b>-m</b>)
+  * <li> Seed for random generation of instances (<b>-i</b>)
+  * <li> The average number of centroids in the model (<b>-C</b>)
+  * <li> Deviation of the number of centroids in the model (<b>-c</b>)
+  * <li> The average radii of the centroids in the model (<b>-R</b>)
+  * <li> Deviation of average radii of the centroids in the model (<b>-r</b>)
+  * <li> Offset of the average weight a cluster has(<b>-D</b>)
+  * <li> Kernels move a predefined distance of 0.01 every X points (<b>-V</b>)
+  * <li> Speed/Velocity point offset (<b>-v</b>)
+  * <li> Noise level (<b>-N</b>)
+  * <li> Allow noise to be placed within a cluster(<b>-n</b>)
+  * <li> Event frequency (<b>-E</b>)
+  * <li> Enable merging and splitting of clusters(<b>-M</b>)
+  * <li> Enable emerging and disappearing of clusters (<b>-e</b>)
+  * <li> The number of features to generate (<b>-f</b>)
+  * <li> Decay horizon (<b>-h</b>)
+  * </ul>
+  */
 
 class RandomRBFEventsGenerator extends Generator {
 
@@ -117,17 +117,17 @@ class RandomRBFEventsGenerator extends Generator {
   var numGeneratedInstances: Int = 0
   var numActiveKernels: Int = 0
   var nextEventCounter: Int = 0
-  var nextEventChoice = -1
+  var nextEventChoice: Int = -1
   var clusterIdCounter: Int = 0
   var mergeClusterA: GeneratorCluster = null
   var mergeClusterB: GeneratorCluster = null
   var mergeKernelsOverlapping = false
 
   /**
-   * A GeneratorCluster represents the cluster which contains
-   *  some MicroCluster(represented by SphereCluster) in Clustream
-   *  Algorithm.
-   */
+    * A GeneratorCluster represents the cluster which contains
+    * some MicroCluster(represented by SphereCluster) in Clustream
+    * Algorithm.
+    */
   class GeneratorCluster {
 
     var generator: SphereCluster = null

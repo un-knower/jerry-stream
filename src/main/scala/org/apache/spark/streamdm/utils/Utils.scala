@@ -41,7 +41,7 @@ object Utils {
     out.writeObject(classifier)
     out.flush()
     out.close()
-    val byteArray: Array[Byte] = baoStream.toByteArray()
+    val byteArray: Array[Byte] = baoStream.toByteArray
     val in: ObjectInputStream = new ObjectInputStream(new BufferedInputStream(
       new ByteArrayInputStream(byteArray)))
     val copy: Classifier = in.readObject().asInstanceOf[Classifier]
@@ -55,13 +55,13 @@ object Utils {
    * @param r the random generator
    * @return a random value sampled from the distribution
    */
-  def poisson(lambda: Double, r: Random) = {
+  def poisson(lambda: Double, r: Random): Double = {
     if (lambda < 100.0) {
       var product = 1.0
       var sum = 1.0
       val threshold = r.nextDouble() * Math.exp(lambda)
       var i = 1.0
-      var max = Math.max(100, 10 * Math.ceil(lambda).toInt)
+      val max = Math.max(100, 10 * Math.ceil(lambda).toInt)
       while ((i < max) && (sum <= threshold)) {
         product *= (lambda / i)
         sum += product
@@ -81,7 +81,7 @@ object Utils {
   */
   def majorityVote(array: Array[Double], size: Integer): Double = {
     val frequencyArray: Array[Double] = Array.fill(size)(0)
-    for (i <- 0 until array.length)
+    for (i <- array.indices)
       frequencyArray(array(i).toInt) += 1
     argmax(frequencyArray)
   }
@@ -108,9 +108,9 @@ object Utils {
    */
   def transpose(input: Array[Array[Double]]): Array[Array[Double]] = {
     val output: Array[Array[Double]] = Array.fill(input(0).length)(new Array[Double](input.length))
-    input.zipWithIndex.map {
+    input.zipWithIndex.foreach {
       row =>
-        row._1.zipWithIndex.map {
+        row._1.zipWithIndex.foreach {
           col => output(col._2)(row._2) = input(row._2)(col._2)
         }
     }
@@ -126,9 +126,9 @@ object Utils {
    */
   def splitTranspose(input: Array[Array[Double]], fIndex: Int): Array[Array[Double]] = {
     val output: Array[Array[Double]] = Array.fill(2)(new Array[Double](input.length))
-    input.zipWithIndex.map {
+    input.zipWithIndex.foreach {
       row =>
-        row._1.zipWithIndex.map {
+        row._1.zipWithIndex.foreach {
           col =>
             if (col._2 == fIndex) output(0)(row._2) = input(row._2)(col._2)
             else output(1)(row._2) += input(row._2)(col._2)
@@ -145,9 +145,10 @@ object Utils {
    */
   def normal(input: Array[Array[Double]]): Array[Array[Double]] = {
     val total = input.map(_.sum).sum
-    input.map { row => row.map {
-      _ / total
-    }
+    input.map { row =>
+      row.map {
+        _ / total
+      }
     }
   }
 

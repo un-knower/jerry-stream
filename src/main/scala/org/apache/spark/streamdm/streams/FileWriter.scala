@@ -18,7 +18,6 @@ package org.apache.spark.streamdm.streams
 
 import java.io._
 
-import com.github.javacliparser.{Configurable, IntOption, StringOption, ClassOption}
 import org.apache.spark.streamdm.core._
 import org.apache.spark.streamdm.core.specification._
 import org.apache.spark.streamdm.streams.generators._
@@ -35,23 +34,13 @@ import org.apache.spark.streamdm.streams.generators._
   * </ul>
   */
 
-class FileWriter extends Configurable with Serializable {
-
-  val chunkNumberOption: IntOption = new IntOption("chunkNumber", 'n',
-    "Number of chunks to be generated", 10, 1, Integer.MAX_VALUE)
-
-  val fileNameOption: StringOption = new StringOption("fileName", 'f',
-    "File Name", "./sampleData")
-
-  val dataHeadTypeOption: StringOption = new StringOption("dataHeadType", 'h',
-    "Data Head Format", "arff")
-
-  val generatorOption: ClassOption = new ClassOption("generator", 'g',
-    "generator to use", classOf[Generator], "RandomRBFGenerator")
+class FileWriter(val chunkNumber: Int
+                 , val fileName: String
+                 , val dataHeadType: String = "arff"
+                 , val generator: Generator) extends Serializable {
 
   val headParser = new SpecificationParser
 
-  var generator: Generator = null
 
   var headType: String = "arff"
 
@@ -59,17 +48,15 @@ class FileWriter extends Configurable with Serializable {
     * writes sample data to file or HDFS file
     */
   def write(): Unit = {
-    generator = generatorOption.getValue()
-    headType = dataHeadTypeOption.getValue()
+    headType = dataHeadType
     if (generator != null)
-      write(fileNameOption.getValue, chunkNumberOption.getValue)
+      write(fileName, chunkNumber)
   }
 
   /**
     * writes sample data to file or HDFS file
     *
     * @param fileName    file name to be stored
-    * @param chunkSize   chunk size of RDD
     * @param chunkNumber chunk number would be stored
     * @return Unit
     */
@@ -82,7 +69,6 @@ class FileWriter extends Configurable with Serializable {
     * writes sample data to file
     *
     * @param fileName    file name to be stored
-    * @param chunkSize   chunk size of RDD
     * @param chunkNumber chunk number would be stored
     * @return Unit
     */
@@ -95,7 +81,7 @@ class FileWriter extends Configurable with Serializable {
     //   val writerArrf = new PrintWriter(fileArrf)
     try {
       //write to head file
-      val head = headParser.getHead(generator.getExampleSpecification(), headType)
+      val head = headParser.getHead(generator.getExampleSpecification, headType)
       headWriter.write(head)
       //write to data file
       for (i <- 0 until chunkNumber) {
@@ -119,30 +105,11 @@ class FileWriter extends Configurable with Serializable {
     * writes sample data to HDFS file
     *
     * @param fileName    file name to be stored
-    * @param chunkSize   chunk size of RDD
     * @param chunkNumber chunk number would be stored
     * @return Unit
     */
   private def writeToHDFS(fileName: String, chunkNumber: Int): Unit = {
     //todo
-  }
-
-}
-
-object SampleDataWriter {
-
-  def main(args: Array[String]) {
-    var params = "FileWriter -n 10 -f ./rbfevents2 -g (RandomRBFEventsGenerator -f 3)"
-    if (args.length > 2) {
-      params = args.mkString(" ")
-    }
-    try {
-      println(params)
-      val writer: FileWriter = ClassOption.cliStringToObject(params, classOf[FileWriter], null)
-      writer.write()
-    } catch {
-      case e: Exception => e.printStackTrace()
-    }
   }
 
 }
