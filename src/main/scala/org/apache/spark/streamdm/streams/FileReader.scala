@@ -86,7 +86,7 @@ class FileReader(val chunkSize: Int
     *
     * @return an ExampleSpecification of the features
     */
-  override def getExampleSpecification(): ExampleSpecification = {
+  override def getExampleSpecification: ExampleSpecification = {
     init()
     spec
   }
