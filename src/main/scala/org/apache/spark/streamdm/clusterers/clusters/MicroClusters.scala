@@ -50,7 +50,6 @@ case class MicroClusters(val microclusters: Array[MicroCluster])
   /**
     * Update the clustering data structure, depending on the Example given.
     *
-    * @param inst the Example based on which the Model is updated
     * @return the updated MicroClusters object
     */
   override def update(change: Example): MicroClusters = {
@@ -58,8 +57,8 @@ case class MicroClusters(val microclusters: Array[MicroCluster])
     //Find the closest kernel to the instance
     val clTuple = microclusters.foldLeft((0, Double.MaxValue, 0))((cl, mcl) => {
       val dist = change.in.distanceTo(mcl.centroid)
-      if (dist < cl._2) ((cl._3, dist, cl._3 + 1))
-      else ((cl._1, cl._2, cl._3 + 1))
+      if (dist < cl._2) (cl._3, dist, cl._3 + 1)
+      else (cl._1, cl._2, cl._3 + 1)
     })
     val closest = clTuple._1
     val distance = clTuple._2
@@ -156,9 +155,9 @@ case class MicroClusters(val microclusters: Array[MicroCluster])
     */
   private def mergeMicroclusters(target: Int, source: Int): MicroClusters = {
     if (target != source) {
-      var mergedMicroclusters = microclusters.updated(target,
+      val mergedMicroclusters = microclusters.updated(target,
         microclusters(target).merge(microclusters(source)))
-      new MicroClusters(mergedMicroclusters.take(source) ++
+      MicroClusters(mergedMicroclusters.take(source) ++
         mergedMicroclusters.drop(source + 1))
     }
     else

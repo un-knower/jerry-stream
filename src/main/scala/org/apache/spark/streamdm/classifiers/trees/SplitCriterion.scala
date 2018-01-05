@@ -77,7 +77,6 @@ class InfoGainSplitCriterion extends SplitCriterion with Serializable {
     * @return value of the merit of splitting
     */
   override def merit(pre: Array[Double], post: Array[Array[Double]]): Double = {
-    val num = numGTFrac(post, minBranch)
     if (numGTFrac(post, minBranch) < 2) Double.NegativeInfinity
     else {
       val merit = entropy(pre) - entropy(post)
@@ -117,7 +116,7 @@ class InfoGainSplitCriterion extends SplitCriterion with Serializable {
   def entropy(post: Array[Array[Double]]): Double = {
     if (post == null || post.length == 0 || post(0).length == 0) 0.0
     else {
-      post.map { row => (row.sum * entropy(row)) }.sum / post.map(_.sum).sum
+      post.map { row => row.sum * entropy(row) }.sum / post.map(_.sum).sum
     }
 
   }
@@ -136,7 +135,7 @@ class InfoGainSplitCriterion extends SplitCriterion with Serializable {
       val sums = post.map {
         _.sum
       }
-      sums.filter(_ > sums.sum * minFrac).length
+      sums.count(_ > sums.sum * minFrac)
     }
   }
 
@@ -146,7 +145,7 @@ class InfoGainSplitCriterion extends SplitCriterion with Serializable {
     * @param pre an Array to be valued
     * @return whether a array has negative value
     */
-  private[trees] def hasNegative(pre: Array[Double]): Boolean = pre.filter(x => x < 0).length > 0
+  private[trees] def hasNegative(pre: Array[Double]): Boolean = pre.exists(x => x < 0)
 
 }
 
@@ -251,9 +250,9 @@ object SplitCriterion {
     */
   def createSplitCriterion(
                             scType: SplitCriterionType, minBranch: Double = 0.01): SplitCriterion = scType match {
-    case infoGrain: InfoGainSplitCriterionType => new InfoGainSplitCriterion(minBranch)
-    case gini: GiniSplitCriterionType => new GiniSplitCriterion()
-    case vr: VarianceReductionSplitCriterionType => new VarianceReductionSplitCriterion()
+    case _: InfoGainSplitCriterionType => new InfoGainSplitCriterion(minBranch)
+    case _: GiniSplitCriterionType => new GiniSplitCriterion()
+    case _: VarianceReductionSplitCriterionType => new VarianceReductionSplitCriterion()
     case _ => new InfoGainSplitCriterion(minBranch)
   }
 }

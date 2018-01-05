@@ -35,16 +35,13 @@ import org.apache.spark.streamdm.core.specification.ExampleSpecification
   * </ul>
   */
 
-class MultiClassLearner extends Classifier {
+class MultiClassLearner(val baseClassifier: Classifier) extends Classifier {
 
   type T = LinearModel
 
-  val baseClassifierOption: ClassOption = new ClassOption("baseClassifier", 'l',
-    "Base Classifier to use", classOf[Classifier], "SGDLearner")
+  var classifiers: Array[Classifier] = _
 
-  var classifiers: Array[Classifier] = null
-
-  var exampleLearnerSpecification: ExampleSpecification = null
+  var exampleLearnerSpecification: ExampleSpecification = _
 
   var sizeEnsemble: Int = 0
 
@@ -56,8 +53,8 @@ class MultiClassLearner extends Classifier {
     exampleLearnerSpecification = exampleSpecification
 
     //Create the learner members of the ensemble
-    val baseClassifier: Classifier = baseClassifierOption.getValue()
-    sizeEnsemble = exampleSpecification.outputFeatureSpecification(0).range
+    val baseClassifier: Classifier = baseClassifier
+    sizeEnsemble = exampleSpecification.outputFeatureSpecification(0).range()
     classifiers = new Array[Classifier](sizeEnsemble)
 
     for (i <- 0 until sizeEnsemble) {

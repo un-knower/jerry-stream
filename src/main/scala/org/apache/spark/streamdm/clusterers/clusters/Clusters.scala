@@ -32,7 +32,6 @@ trait Clusters extends Model {
   /**
     * Update the clustering data structure, depending on the Example given.
     *
-    * @param inst the Example based on which the Model is updated
     * @return the updated Clusters object
     */
   override def update(change: Example): T

@@ -28,7 +28,7 @@ object Utils {
    */
   def addArrays(array1: Array[Double], array2: Array[Double]): Array[Double] = {
     val merge = new Array[Double](min(array1.length, array2.length))
-    for (i <- 0 until merge.length)
+    for (i <- merge.indices)
       merge(i) = array1(i) + array2(i)
     merge
   }

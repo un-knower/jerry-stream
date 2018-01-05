@@ -18,7 +18,8 @@
 package org.apache.spark.streamdm.clusterers.clusters
 
 import org.apache.spark.streamdm.core._
-import scala.collection.mutable.Queue
+
+import scala.collection.mutable
 import scala.util.control.Breaks._
 
 
@@ -37,8 +38,8 @@ class BucketManager(val n: Int, val maxsize: Int) extends Clusters {
     * recursively computing the coresets.
     */
   class Bucket(val bucketsize: Int = maxsize) extends Serializable {
-    val points = Queue[Example]()
-    val spillover = Queue[Example]()
+    val points: mutable.Queue[Example] = mutable.Queue[Example]()
+    val spillover: mutable.Queue[Example] = mutable.Queue[Example]()
 
     def isFull: Boolean = if (points.length == bucketsize) true else false
 

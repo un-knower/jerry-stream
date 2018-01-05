@@ -17,11 +17,10 @@
 
 package org.apache.spark.streamdm.classifiers
 
-import org.apache.spark.streamdm.core._
 import org.apache.spark.streamdm.classifiers.model._
-import org.apache.spark.streaming.dstream._
-import com.github.javacliparser.{ClassOption, FloatOption, IntOption}
+import org.apache.spark.streamdm.core._
 import org.apache.spark.streamdm.core.specification.ExampleSpecification
+import org.apache.spark.streaming.dstream._
 
 /**
   * The SGDLearner trains a LinearModel using the stochastic gradient descent
@@ -38,30 +37,14 @@ import org.apache.spark.streamdm.core.specification.ExampleSpecification
   * <li> Regularization parameter (<b>-p</b>)
   * </ul>
   */
-class SGDLearner extends Classifier {
+class SGDLearner(val numFeatures: Int, val lambda: Double, lossFunction: Loss, regularizerParameter: Double) extends Classifier {
 
   type T = LinearModel
 
-  val numFeaturesOption: IntOption = new IntOption("numFeatures", 'f',
-    "Number of Features", 3, 1, Integer.MAX_VALUE)
-
-  val lambdaOption: FloatOption = new FloatOption("lambda", 'l',
-    "Lambda", .01, 0, Float.MaxValue)
-
-  val lossFunctionOption: ClassOption = new ClassOption("lossFunction", 'o',
-    "Loss function to use", classOf[Loss], "LogisticLoss")
-
-  val regularizerOption: ClassOption = new ClassOption("regularizer",
-    'r', "Regularizer to use", classOf[Regularizer], "ZeroRegularizer")
-
-  val regularizerParameter: FloatOption = new FloatOption("regParam", 'p',
-    "Regularization parameter", .001, 0, Float.MaxValue)
-
-
-  var model: LinearModel = null
-  val regularizer: Regularizer = regularizerOption.getValue()
-  val loss: Loss = lossFunctionOption.getValue()
-  var exampleLearnerSpecification: ExampleSpecification = null
+  var model: LinearModel = _
+  val regularizer: Regularizer = regularizer
+  val loss: Loss = lossFunction
+  var exampleLearnerSpecification: ExampleSpecification = _
 
   /* Init the model based on the algorithm implemented in the learner,
    * from the stream of instances given for training.
@@ -70,7 +53,7 @@ class SGDLearner extends Classifier {
   override def init(exampleSpecification: ExampleSpecification): Unit = {
     exampleLearnerSpecification = exampleSpecification
     model = new LinearModel(loss, new DenseInstance(Array.fill[Double]
-      (numFeaturesOption.getValue + 1)(0.0)), numFeaturesOption.getValue)
+      (numFeatures + 1)(0.0)), numFeatures)
   }
 
   /* Train the model using stochastic gradient descent.
@@ -87,8 +70,8 @@ class SGDLearner extends Classifier {
           //add the gradient and the regularizer and update the model
           val grad = mod._1.gradient(inst)
           val reg = mod._1.regularize(regularizer).map(f =>
-            f * regularizerParameter.getValue)
-          val change = grad.add(reg).map(f => f * lambdaOption.getValue)
+            f * regularizerParameter)
+          val change = grad.add(reg).map(f => f * lambda)
           (mod._1.update(new Example(change)), 1.0)
         },
         (mod1, mod2) =>
