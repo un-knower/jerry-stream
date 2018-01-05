@@ -17,13 +17,12 @@
 
 package org.apache.spark.streamdm.clusterers
 
+import org.apache.spark.rdd._
 import org.apache.spark.streamdm.clusterers.clusters._
 import org.apache.spark.streamdm.clusterers.utils._
 import org.apache.spark.streamdm.core._
-import org.apache.spark.streaming.dstream._
-import org.apache.spark.rdd._
-import com.github.javacliparser._
 import org.apache.spark.streamdm.core.specification.ExampleSpecification
+import org.apache.spark.streaming.dstream._
 
 /**
   * A Clusterer trait defines the needed operations for any implemented
@@ -38,25 +37,16 @@ import org.apache.spark.streamdm.core.specification.ExampleSpecification
   * <li> Iterations (<b>-i</b>), number of iterations of the k-means alforithm
   * </ul>
   */
-class Clustream extends Clusterer {
+class Clustream(val k: Int
+                , val mc: Int
+                , val init: Int
+                , val rep: Int) extends Clusterer {
 
   type T = MicroClusters
 
   var microclusters: MicroClusters = null
   var initialBuffer: Array[Example] = null
   var clusters: Array[Example] = null
-
-  val kOption: IntOption = new IntOption("numClusters", 'k',
-    "Number of clusters for output", 10, 1, Integer.MAX_VALUE)
-
-  val mcOption: IntOption = new IntOption("numMicroclusters", 'm',
-    "Size of microcluster buffer", 100, 1, Integer.MAX_VALUE)
-
-  val initOption: IntOption = new IntOption("initialBuffer", 'b',
-    "Size of initial buffer", 1000, 1, Integer.MAX_VALUE)
-
-  val repOption: IntOption = new IntOption("kMeansIters", 'i',
-    "Number of k-means iterations", 100, 1, Integer.MAX_VALUE)
 
   var exampleLearnerSpecification: ExampleSpecification = null
 
@@ -76,8 +66,8 @@ class Clustream extends Clusterer {
   def train(input: DStream[Example]): Unit = {
     input.foreachRDD(rdd => {
       val numInstances: Long = initialBuffer.length + 1
-      if (numInstances < initOption.getValue) {
-        val neededInstances = (initOption.getValue - numInstances).toDouble
+      if (numInstances < init) {
+        val neededInstances = (init - numInstances).toDouble
         val rddCount = rdd.count.toDouble
         var procRDD = rdd
         val fractionNeeded = neededInstances / rddCount
@@ -91,12 +81,11 @@ class Clustream extends Clusterer {
       else if (microclusters.microclusters.length == 0) {
         val timestamp = System.currentTimeMillis / 1000
         microclusters = new MicroClusters(Array.fill[MicroCluster]
-          (mcOption.getValue)(new MicroCluster(new NullInstance(),
+          (mc)(new MicroCluster(new NullInstance(),
           new NullInstance, 0, 0.0, 0)))
         //cluster the initial buffer to get the 
         //centroids of themicroclusters
-        val centr = KMeans.cluster(initialBuffer, mcOption.getValue,
-          repOption.getValue)
+        val centr = KMeans.cluster(initialBuffer, mc, rep)
         //for every instance in the initial buffer, add it 
         //to the closest microcluster
         initialBuffer.foreach(iex => {
@@ -110,14 +99,12 @@ class Clustream extends Clusterer {
         microclusters = processMicroclusters(rdd, microclusters)
       }
       //perform "offline" clustering
-      if (initialBuffer.length < initOption.getValue) {
-        clusters = KMeans.cluster(initialBuffer, kOption.getValue,
-          repOption.getValue)
+      if (initialBuffer.length < init) {
+        clusters = KMeans.cluster(initialBuffer, k, rep)
       }
       else {
         val examples = microclusters.toExampleArray
-        clusters = KMeans.cluster(examples, kOption.getValue,
-          repOption.getValue)
+        clusters = KMeans.cluster(examples, k, rep)
       }
     })
   }
@@ -132,8 +119,7 @@ class Clustream extends Clusterer {
     * Processes the new microclusters from an input RDD and given an initial
     * state of the microclusters.
     *
-    * @param rdd           the input RDD of Example
-    * @param microclusters the initial MicroClusters data structure
+    * @param rdd the input RDD of Example
     * @return the updated microclusters
     */
   private def processMicroclusters(rdd: RDD[Example], input: MicroClusters):
@@ -162,5 +148,4 @@ class Clustream extends Clusterer {
       (x, assignedCl)
     })
   }
-
 }

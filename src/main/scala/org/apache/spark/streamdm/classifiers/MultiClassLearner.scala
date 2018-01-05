@@ -53,7 +53,6 @@ class MultiClassLearner(val baseClassifier: Classifier) extends Classifier {
     exampleLearnerSpecification = exampleSpecification
 
     //Create the learner members of the ensemble
-    val baseClassifier: Classifier = baseClassifier
     sizeEnsemble = exampleSpecification.outputFeatureSpecification(0).range()
     classifiers = new Array[Classifier](sizeEnsemble)
 

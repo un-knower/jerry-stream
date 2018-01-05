@@ -37,12 +37,15 @@ import org.apache.spark.streaming.dstream._
   * <li> Regularization parameter (<b>-p</b>)
   * </ul>
   */
-class SGDLearner(val numFeatures: Int, val lambda: Double, lossFunction: Loss, regularizerParameter: Double) extends Classifier {
+class SGDLearner(val numFeatures: Int
+                 , val lambda: Double
+                 , lossFunction: Loss
+                 , val regularizerParameter: Double
+                 , val regularizer: Regularizer) extends Classifier {
 
   type T = LinearModel
 
   var model: LinearModel = _
-  val regularizer: Regularizer = regularizer
   val loss: Loss = lossFunction
   var exampleLearnerSpecification: ExampleSpecification = _
 

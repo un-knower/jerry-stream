@@ -17,7 +17,7 @@
 
 package org.apache.spark.streamdm.core.specification
 
-import scala.collection.mutable.Map
+import scala.collection.mutable
 
 /**
   * An InstanceSpecification contains information about the features.
@@ -26,8 +26,8 @@ import scala.collection.mutable.Map
   */
 
 class InstanceSpecification extends Serializable {
-  val nominalFeatureSpecificationMap = Map[Int, FeatureSpecification]()
-  val featureNameMap = Map[Int, String]()
+  val nominalFeatureSpecificationMap: mutable.Map[Int, FeatureSpecification] = mutable.Map[Int, FeatureSpecification]()
+  val featureNameMap: mutable.Map[Int, String] = mutable.Map[Int, String]()
   val numericFeatureSpecification: NumericFeatureSpecification = new NumericFeatureSpecification
 
   /**
@@ -59,7 +59,6 @@ class InstanceSpecification extends Serializable {
     * Adds a specification for the instance feature
     *
     * @param index the index at which the value is added
-    * @param input the feature specification which is added up
     */
   def addFeatureSpecification(index: Int, name: String, fSpecification: FeatureSpecification = null): Unit = {
     if (fSpecification != null && fSpecification.isInstanceOf[NominalFeatureSpecification]) {

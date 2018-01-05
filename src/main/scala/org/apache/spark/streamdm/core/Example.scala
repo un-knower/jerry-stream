@@ -28,9 +28,9 @@ class Example(inInstance: Instance, outInstance: Instance = new NullInstance,
               weightValue: Double = 1.0)
   extends Serializable {
 
-  val in = inInstance
-  val out = outInstance
-  val weight = weightValue
+  val in: Instance = inInstance
+  val out: Instance = outInstance
+  val weight: Double = weightValue
 
   /** Get the input value present at position index
     *

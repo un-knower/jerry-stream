@@ -27,7 +27,7 @@ case class TextInstance(inFeatures: Map[String, Double])
 
   type T = TextInstance
 
-  val features = inFeatures
+  val features: Map[String, Double] = inFeatures
 
   /* Get the feature value for a given index 
   *
@@ -42,7 +42,7 @@ case class TextInstance(inFeatures: Map[String, Double])
    *
    * @return an array of turple2(value,index)
    */
-  def getFeatureIndexArray(): Array[(Double, Int)] = features.toArray.map { x => (x._2, x._1.toInt) }
+  def getFeatureIndexArray: Array[(Double, Int)] = features.toArray.map { x => (x._2, x._1.toInt) }
 
   /* Get the feature value for a given key
   *
@@ -71,10 +71,9 @@ case class TextInstance(inFeatures: Map[String, Double])
     * @return an Instance representing the added Instances
     */
   override def add(input: Instance): TextInstance = input match {
-    case TextInstance(f) => {
+    case TextInstance(f) =>
       val addedInstance = addTupleArrays(f.toArray, features.toArray)
       new TextInstance(arrayToMap(addedInstance))
-    }
     case _ => this
   }
 
@@ -85,12 +84,10 @@ case class TextInstance(inFeatures: Map[String, Double])
     * @return an Instance representing the Hadamard product
     */
   override def hadamard(input: Instance): TextInstance = input match {
-    case TextInstance(f) => {
+    case TextInstance(f) =>
       val addedInstance = mulTupleArrays(f.toArray, features.toArray)
       new TextInstance(arrayToMap(addedInstance))
-    }
     case _ => this
-
   }
 
   /**
@@ -100,14 +97,13 @@ case class TextInstance(inFeatures: Map[String, Double])
     * @return a Double representing the distance value
     */
   override def distanceTo(input: Instance): Double = input match {
-    case TextInstance(f) => {
+    case TextInstance(f) =>
       var sum: Double = 0.0
       for ((k, v) <- f)
         if (v != 0) sum += math.pow(valueAt(k) - v, 2.0)
       for ((k, v) <- features)
         if (f.getOrElse(k, 0.0) == 0) sum += math.pow(v, 2.0)
       math.sqrt(sum)
-    }
     case _ => Double.MaxValue
   }
 
@@ -139,7 +135,7 @@ case class TextInstance(inFeatures: Map[String, Double])
     * @return a new Instance with the transformed features
     */
   override def map(func: Double => Double): TextInstance =
-    new TextInstance(features.mapValues { case x => func(x) })
+    new TextInstance(features.mapValues(x => func(x)))
 
   /**
     * Aggregate the values of an instance
@@ -153,7 +149,7 @@ case class TextInstance(inFeatures: Map[String, Double])
   private def dotTupleArrays(l1: Array[(String, Double)],
                              l2: Array[(String, Double)]): Double =
     (l1 ++ l2).groupBy(_._1).filter { case (k, v) => v.length == 2 }.
-      map { case (k, v) => (k, v.map(_._2).reduce(_ * _)) }.toArray.unzip._2.sum
+      map { case (k, v) => (k, v.map(_._2).product) }.toArray.unzip._2.sum
 
   private def addTupleArrays(l1: Array[(String, Double)],
                              l2: Array[(String, Double)]): Array[(String, Double)] =

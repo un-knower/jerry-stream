@@ -28,7 +28,7 @@ case class DenseInstance(inVector: Array[Double])
 
   type T = DenseInstance
 
-  val features = inVector
+  val features: Array[Double] = inVector
 
   /* Get the feature value present at position index
   * In case the index does not exist or is invalid, then NaN is returned.

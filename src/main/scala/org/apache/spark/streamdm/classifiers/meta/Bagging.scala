@@ -37,7 +37,7 @@ import org.apache.spark.streaming.dstream._
   * </ul>
   */
 
-class Bagging(val baseClassifier: Classifier, val ensembleSize: Int) extends Classifier {
+class Bagging(val baseClassifier: Classifier, val sizeEnsemble: Int) extends Classifier {
 
   type T = LinearModel
 
@@ -55,8 +55,6 @@ class Bagging(val baseClassifier: Classifier, val ensembleSize: Int) extends Cla
     exampleLearnerSpecification = exampleSpecification
 
     //Create the learner members of the ensemble
-    val baseClassifier: Classifier = baseClassifier
-    val sizeEnsemble = ensembleSize
     classifiers = new Array[Classifier](sizeEnsemble)
 
     for (i <- 0 until sizeEnsemble) {
@@ -71,7 +69,7 @@ class Bagging(val baseClassifier: Classifier, val ensembleSize: Int) extends Cla
      * @return the updated Model
      */
   override def train(input: DStream[Example]): Unit = {
-    for (i <- 0 until ensembleSize) {
+    for (i <- 0 until sizeEnsemble) {
       classifiers(i).train(input.map(onlineSampling))
     }
 
@@ -103,7 +101,6 @@ class Bagging(val baseClassifier: Classifier, val ensembleSize: Int) extends Cla
    * @return the predicted value
    */
   def ensemblePredict(example: Example): Double = {
-    val sizeEnsemble = ensembleSize
     val predictions: Array[Double] = new Array(sizeEnsemble)
     for (i <- 0 until sizeEnsemble) {
       predictions(i) = classifiers(i).getModel.asInstanceOf[ClassificationModel].predict(example)

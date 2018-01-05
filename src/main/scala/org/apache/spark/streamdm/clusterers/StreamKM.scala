@@ -37,25 +37,16 @@ import org.apache.spark.streamdm.core.specification.ExampleSpecification
   * <li> Size of coresets (<b>-s</b>)
   * <li> Learning window (<b>-w</b>) * </ul>
   */
-class StreamKM extends Clusterer {
+class StreamKM(val k: Int
+               , val rep: Int
+               , val sizeCoreset: Int
+               , val width: Int) extends Clusterer {
 
   type T = BucketManager
 
   var bucketmanager: BucketManager = null
   var numInstances: Long = 0
   var initialBuffer: Array[Example] = Array[Example]()
-
-  val kOption: IntOption = new IntOption("numClusters", 'k',
-    "Number of clusters for output", 10, 1, Integer.MAX_VALUE)
-
-  val repOption: IntOption = new IntOption("kMeansIters", 'i',
-    "Number of k-means iterations", 1000, 1, Integer.MAX_VALUE)
-
-  val sizeCoresetOption: IntOption = new IntOption("sizeCoreset", 's',
-    "Size of coreset", 10000, 1, Integer.MAX_VALUE)
-
-  val widthOption: IntOption = new IntOption("width",
-    'w', "Size of window for training learner.", 100000, 1, Integer.MAX_VALUE);
 
   var exampleLearnerSpecification: ExampleSpecification = null
 
@@ -64,7 +55,7 @@ class StreamKM extends Clusterer {
     */
   def init(exampleSpecification: ExampleSpecification): Unit = {
     exampleLearnerSpecification = exampleSpecification
-    bucketmanager = new BucketManager(widthOption.getValue, sizeCoresetOption.getValue)
+    bucketmanager = new BucketManager(width, sizeCoreset)
   }
 
   /**
@@ -94,12 +85,12 @@ class StreamKM extends Clusterer {
     * @return an Array of Examples representing the clusters
     */
   def getClusters: Array[Example] = {
-    if (numInstances <= sizeCoresetOption.getValue) {
+    if (numInstances <= sizeCoreset) {
       bucketmanager.buckets(0).points.toArray
     }
     else {
       val streamingCoreset = bucketmanager.getCoreset
-      KMeans.cluster(streamingCoreset, kOption.getValue, repOption.getValue)
+      KMeans.cluster(streamingCoreset, k, rep)
     }
   }
 
@@ -115,8 +106,7 @@ class StreamKM extends Clusterer {
       val assignedCl = getClusters.foldLeft((0, Double.MaxValue, 0))(
         (cl, centr) => {
           val dist = centr.in.distanceTo(x.in)
-          if (dist < cl._2) ((cl._3, dist, cl._3 + 1))
-          else ((cl._1, cl._2, cl._3 + 1))
+          if (dist < cl._2) (cl._3, dist, cl._3 + 1) else (cl._1, cl._2, cl._3 + 1)
         })._1
       (x, assignedCl)
     })

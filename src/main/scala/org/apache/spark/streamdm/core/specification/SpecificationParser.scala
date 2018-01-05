@@ -104,7 +104,6 @@ class SpecificationParser extends Logging {
       } else if ("@attribute".equalsIgnoreCase(line.substring(0, 10))) {
 
         val featureInfos: Array[String] = line.split("\\s+")
-        val name: String = featureInfos(1)
         if (!isArffNumeric(featureInfos(2))) {
           val featurevalues: Array[String] = featureInfos(2).substring(
             featureInfos(2).indexOf("{") + 1, featureInfos(2).indexOf("}")).

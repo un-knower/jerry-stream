@@ -32,8 +32,8 @@ case class SparseInstance(inIndexes: Array[Int], inValues: Array[Double])
 
   type T = SparseInstance
 
-  val indexes = inIndexes
-  val values = inValues
+  val indexes: Array[Int] = inIndexes
+  val values: Array[Double] = inValues
 
   /* Get the value present at position index
   * In case the index does not exist or is invalid, then NaN is returned.
@@ -60,7 +60,7 @@ case class SparseInstance(inIndexes: Array[Int], inValues: Array[Double])
  *
  * @return an array of turple2(value,index)
  */
-  def getFeatureIndexArray(): Array[(Double, Int)] = inValues.zip(inIndexes)
+  def getFeatureIndexArray: Array[(Double, Int)] = inValues.zip(inIndexes)
 
   /* Perform a dot product between two instances
   *
@@ -84,7 +84,7 @@ case class SparseInstance(inIndexes: Array[Int], inValues: Array[Double])
     * @return a SparseInstance representing the added Instances
     */
   override def add(input: Instance): SparseInstance = input match {
-    case SparseInstance(ind, v) => {
+    case SparseInstance(ind, v) =>
       var i: Int = 0
       var addedFeatures: Array[Double] = Array()
       var addedIndexes: Array[Int] = Array()
@@ -106,8 +106,7 @@ case class SparseInstance(inIndexes: Array[Int], inValues: Array[Double])
         i += 1
       }
       new SparseInstance(addedIndexes, addedFeatures)
-    }
-    case DenseInstance(f) => {
+    case DenseInstance(f) =>
       var i: Int = 0
       var addedFeatures: Array[Double] = Array()
       var addedIndexes: Array[Int] = Array()
@@ -120,7 +119,6 @@ case class SparseInstance(inIndexes: Array[Int], inValues: Array[Double])
         i += 1
       }
       new SparseInstance(addedIndexes, addedFeatures)
-    }
     case _ => new SparseInstance(indexes, values)
   }
 
@@ -130,7 +128,7 @@ case class SparseInstance(inIndexes: Array[Int], inValues: Array[Double])
     * @return a SparseInstance representing the Hadamard product
     */
   override def hadamard(input: Instance): SparseInstance = input match {
-    case SparseInstance(ind, v) => {
+    case SparseInstance(ind, v) =>
       var i: Int = 0
       var addedFeatures: Array[Double] = Array()
       var addedIndexes: Array[Int] = Array()
@@ -143,8 +141,7 @@ case class SparseInstance(inIndexes: Array[Int], inValues: Array[Double])
         i += 1
       }
       new SparseInstance(addedIndexes, addedFeatures)
-    }
-    case DenseInstance(f) => {
+    case DenseInstance(f) =>
       var i: Int = 0
       var addedFeatures: Array[Double] = Array()
       var addedIndexes: Array[Int] = Array()
@@ -157,7 +154,6 @@ case class SparseInstance(inIndexes: Array[Int], inValues: Array[Double])
         i += 1
       }
       new SparseInstance(addedIndexes, addedFeatures)
-    }
     case _ => new SparseInstance(indexes, values)
   }
 
@@ -167,7 +163,7 @@ case class SparseInstance(inIndexes: Array[Int], inValues: Array[Double])
     * @return a Double representing the distance value
     */
   override def distanceTo(input: Instance): Double = input match {
-    case SparseInstance(ind, v) => {
+    case SparseInstance(ind, v) =>
       var i: Int = 0
       var sum: Double = 0.0
       while (i < ind.length) {
@@ -181,8 +177,7 @@ case class SparseInstance(inIndexes: Array[Int], inValues: Array[Double])
         i += 1
       }
       math.sqrt(sum)
-    }
-    case DenseInstance(f) => input.distanceTo(this)
+    case DenseInstance(_) => input.distanceTo(this)
     case _ => Double.MaxValue
   }
 
@@ -200,7 +195,7 @@ case class SparseInstance(inIndexes: Array[Int], inValues: Array[Double])
     * @return a new SparseInstance with the transformed features
     */
   override def map(func: Double => Double): SparseInstance =
-    new SparseInstance(indexes, values.map { case x => func(x) })
+    new SparseInstance(indexes, values.map(x => func(x)))
 
   /** Aggregate the values of an instance 
     *
@@ -210,7 +205,7 @@ case class SparseInstance(inIndexes: Array[Int], inValues: Array[Double])
   override def reduce(func: (Double, Double) => Double): Double =
     values.reduce(func)
 
-  override def toString = (indexes zip values).map { case (i, v) =>
+  override def toString: String = (indexes zip values).map { case (i, v) =>
     "%d:%f".format(i + 1, v)
   }.mkString(",")
 
