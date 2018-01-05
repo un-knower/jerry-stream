@@ -40,19 +40,9 @@ import org.apache.spark.streamdm.core.specification.ExampleSpecification
   * <li> Laplace smoothing parameter (<b>-s</b>)
   * </ul>
   */
-class MultinomialNaiveBayes extends Classifier {
+class MultinomialNaiveBayes(val numFeatures: Int, val numClasses: Int, laplaceSmoothingFactor: Int) extends Classifier {
 
   type T = MultinomialNaiveBayesModel
-
-  val numClassesOption: IntOption = new IntOption("numClasses", 'c',
-    "Number of Classes", 2, 2, Integer.MAX_VALUE)
-
-  val numFeaturesOption: IntOption = new IntOption("numFeatures", 'f',
-    "Number of Features", 3, 1, Integer.MAX_VALUE)
-
-  val laplaceSmoothingFactorOption: IntOption = new IntOption(
-    "laplaceSmoothingFactor", 's', "Laplace Smoothing Factor", 1, 1,
-    Integer.MAX_VALUE)
 
   var model: MultinomialNaiveBayesModel = null
 
@@ -65,9 +55,7 @@ class MultinomialNaiveBayes extends Classifier {
     */
   override def init(exampleSpecification: ExampleSpecification): Unit = {
     exampleLearnerSpecification = exampleSpecification
-    model = new MultinomialNaiveBayesModel(
-      numClassesOption.getValue, numFeaturesOption.getValue,
-      laplaceSmoothingFactorOption.getValue)
+    model = new MultinomialNaiveBayesModel(numClasses, numFeatures, laplaceSmoothingFactor)
   }
 
   /**
