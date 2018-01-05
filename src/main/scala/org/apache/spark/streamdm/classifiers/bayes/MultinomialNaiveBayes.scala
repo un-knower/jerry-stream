@@ -17,13 +17,13 @@
 
 package org.apache.spark.streamdm.classifiers.bayes
 
-import scala.math.log10
-import com.github.javacliparser.IntOption
-import org.apache.spark.streaming.dstream._
 import org.apache.spark.streamdm.classifiers.Classifier
-import org.apache.spark.streamdm.core._
 import org.apache.spark.streamdm.classifiers.trees._
+import org.apache.spark.streamdm.core._
 import org.apache.spark.streamdm.core.specification.ExampleSpecification
+import org.apache.spark.streaming.dstream._
+
+import scala.math.log10
 
 /**
   * Incremental Multinomial Naive Bayes learner. Builds a bayesian text
@@ -44,9 +44,9 @@ class MultinomialNaiveBayes(val numFeatures: Int, val numClasses: Int, laplaceSm
 
   type T = MultinomialNaiveBayesModel
 
-  var model: MultinomialNaiveBayesModel = null
+  var model: MultinomialNaiveBayesModel = _
 
-  var exampleLearnerSpecification: ExampleSpecification = null
+  var exampleLearnerSpecification: ExampleSpecification = _
 
   /**
     * Init the model based on the algorithm implemented in the learner.
