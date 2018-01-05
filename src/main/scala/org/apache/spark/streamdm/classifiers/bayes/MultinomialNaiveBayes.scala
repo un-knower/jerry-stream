@@ -112,8 +112,8 @@ class MultinomialNaiveBayesModel(val numClasses: Int, val numFeatures: Int,
 
   // variables used for prediction
   @transient var logNumberDocuments: Double = 0
-  @transient var logProbability: Array[Double] = null
-  @transient var logConditionalProbability: Array[Array[Double]] = null
+  @transient var logProbability: Array[Double] = _
+  @transient var logConditionalProbability: Array[Array[Double]] = _
   @transient var logNumberDocumentsOfClass: Double = 0
 
   def this(numClasses: Int, numFeatures: Int, laplaceSmoothingFactor: Int,
@@ -168,7 +168,7 @@ class MultinomialNaiveBayesModel(val numClasses: Int, val numFeatures: Int,
       }
       isReady = true
     }
-    return isReady
+    isReady
   }
 
   /**
@@ -227,7 +227,7 @@ object NaiveBayes {
     val votes: Array[Double] = classDistribution.map {
       _ / classDistribution.sum
     }
-    for (i <- 0 until votes.length; j <- 0 until featureObservers.length) {
+    for (i <- votes.indices; j <- featureObservers.indices) {
       votes(i) *= featureObservers(j).probability(i, point.featureAt(j))
     }
     votes
@@ -236,7 +236,7 @@ object NaiveBayes {
   // predict the log10 probabilities of all features for Hoeffding Tree
   def predictLog10(point: Example, classDistribution: Array[Double], featureObservers: Array[FeatureClassObserver]): Array[Double] = {
     val votes: Array[Double] = classDistribution.map { x => log10(x / classDistribution.sum) }
-    for (i <- 0 until votes.length; j <- 0 until featureObservers.length) {
+    for (i <- votes.indices; j <- featureObservers.indices) {
       votes(i) += log10(featureObservers(j).probability(i, point.featureAt(j)))
     }
     votes
