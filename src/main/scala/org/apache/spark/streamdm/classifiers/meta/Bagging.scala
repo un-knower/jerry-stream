@@ -77,7 +77,7 @@ class Bagging(val baseClassifier: Classifier, val ensembleSize: Int) extends Cla
 
     //Online Sampling with replacement
     def onlineSampling(example: Example): Example = {
-      val weight = Utils.poisson(1.0, classifierRandom);
+      val weight = Utils.poisson(1.0, classifierRandom)
       new Example(example.in, example.out, weight * example.weight)
     }
   }
