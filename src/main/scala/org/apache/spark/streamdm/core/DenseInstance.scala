@@ -201,7 +201,7 @@ case class DenseInstance(inVector: Array[Double])
   override def reduce(func: (Double, Double) => Double): Double =
     features.reduce(func)
 
-  override def toString = features.mkString(",")
+  override def toString: String = features.mkString(",")
 }
 
 object DenseInstance extends Serializable {
@@ -214,7 +214,7 @@ object DenseInstance extends Serializable {
     * @return a DenseInstance which is parsed from input
     */
   def parse(input: String): DenseInstance = {
-    val tokens = input.split(",")
+    val tokens = input.split(",", -1)
     new DenseInstance(tokens.map(_.toDouble))
   }
 }

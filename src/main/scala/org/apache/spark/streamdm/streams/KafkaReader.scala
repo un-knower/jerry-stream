@@ -62,7 +62,7 @@ class KafkaReader(val brokers: String
     *
     * @return an ExampleSpecification of the features
     */
-  override def getExampleSpecification(): ExampleSpecification = {
+  override def getExampleSpecification: ExampleSpecification = {
 
     //Prepare specification of class attributes
     val outputIS = new InstanceSpecification()

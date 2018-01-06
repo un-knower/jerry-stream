@@ -24,9 +24,9 @@ package org.apache.spark.streamdm.core
   * accepts any type of Instance in the parameters, and that the same DStream can
   * be allowed to contain multiple types of Instance.
   */
-class Example(inInstance: Instance, outInstance: Instance = new NullInstance,
-              weightValue: Double = 1.0)
-  extends Serializable {
+class Example(inInstance: Instance
+              , outInstance: Instance = new NullInstance
+              , weightValue: Double = 1.0) extends Serializable {
 
   val in: Instance = inInstance
   val out: Instance = outInstance
@@ -72,7 +72,7 @@ class Example(inInstance: Instance, outInstance: Instance = new NullInstance,
   def setLabel(index: Int, input: Double): Example =
     new Example(in, out.set(index, input), weight)
 
-  override def toString = {
+  override def toString: String = {
     val inString = in.toString
     val weightString = if (weight == 1.0) "" else " %f".format(weight)
     val outString = out match {
@@ -95,16 +95,19 @@ object Example extends Serializable {
     * @return a DenseInstance which is parsed from input
     */
   def parse(input: String, inType: String, outType: String): Example = {
-    val tokens = input.split("\\s+")
+    val tokens = input.trim.split("\\s+", -1)
     val numTokens = tokens.length
-    if (numTokens == 1)
+    if (numTokens == 1) {
+      /*only input instance : kafka-value : combined by comma*/
       new Example(getInstance(tokens.head, inType))
-    else if (numTokens == 2)
-      new Example(getInstance(tokens.last, inType),
-        getInstance(tokens.head, outType))
-    else
-      new Example(getInstance(tokens.tail.head, inType),
-        getInstance(tokens.head, outType), tokens.last.toDouble)
+    } else if (numTokens == 2) {
+      /*input instance and output instance : kafka-value : combined by comma*/
+      new Example(getInstance(tokens.last, inType), getInstance(tokens.head, outType))
+    }
+    else {
+      /*input instance <whitespace> output instance <whitespace> weight : kafka-value : combined by comma*/
+      new Example(getInstance(tokens.tail.head, inType), getInstance(tokens.head, outType), tokens.last.toDouble)
+    }
   }
 
   /** Parse the input string based on the type of Instance, by calling the
