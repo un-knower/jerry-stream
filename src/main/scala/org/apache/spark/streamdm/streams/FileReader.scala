@@ -61,18 +61,23 @@ class FileReader(val chunkSize: Int
   def init() {
     if (!isInited) {
       val file = new File(fileName)
+
       if (!file.exists()) {
         logError("file does not exists, input a new file name")
         sys.exit()
       }
+
       headFileName = fileName + "." + dataHeadType + ".head"
+
       val hfile: File = new File(headFileName)
+
       if (hfile.exists()) {
         // has a head file
         hasHeadFile = true
       }
-      spec = headParser.getSpecification(
-        if (hasHeadFile) headFileName else fileName, dataHeadType)
+
+      spec = headParser.getSpecification(if (hasHeadFile) headFileName else fileName, dataHeadType)
+
       for (index <- 0 until spec.out(0).range()) {
         logInfo(spec.out(0).asInstanceOf[NominalFeatureSpecification](index))
       }
@@ -103,15 +108,18 @@ class FileReader(val chunkSize: Int
       //get the whole file
       lines = Source.fromFile(fileName).getLines()
     }
+
     // if reach the end of file, will go to the head again
     if (!lines.hasNext) {
       exp
     }
+
     var line = lines.next()
     while (!hasHeadFile && (line == "" || line.startsWith(" ") ||
       line.startsWith("%") || line.startsWith("@"))) {
       line = lines.next()
     }
+
     if (!hasHeadFile) {
       if ("arff".equalsIgnoreCase(dataHeadType)) {
         exp = ExampleParser.fromArff(line, spec)

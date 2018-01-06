@@ -16,11 +16,10 @@
  */
 package org.apache.spark.streamdm.streams.generators
 
-import com.github.javacliparser.IntOption
 import org.apache.spark.streamdm.core._
-import org.apache.spark.streamdm.core.specification._
+import org.apache.spark.streamdm.core.specification.{ExampleSpecification, _}
+
 import scala.util.Random
-import org.apache.spark.streamdm.core.specification.ExampleSpecification
 
 /**
   * Stream generator for generating data from a hyperplane.
@@ -39,7 +38,7 @@ class HyperplaneGenerator(val chunkSize: Int
   /**
     * returns chunk size
     */
-  override def getChunkSize(): Int = {
+  override def getChunkSize: Int = {
     chunkSize
   }
 
@@ -81,7 +80,7 @@ class HyperplaneGenerator(val chunkSize: Int
     *
     * @return an ExampleSpecification of the examples
     */
-  override def getExampleSpecification(): ExampleSpecification = {
+  override def getExampleSpecification: ExampleSpecification = {
 
     //Prepare specification of class attributes
     val outputIS = new InstanceSpecification()
