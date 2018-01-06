@@ -55,8 +55,7 @@ class SGDLearner(val numFeatures: Int
    */
   override def init(exampleSpecification: ExampleSpecification): Unit = {
     exampleLearnerSpecification = exampleSpecification
-    model = new LinearModel(loss, new DenseInstance(Array.fill[Double]
-      (numFeatures + 1)(0.0)), numFeatures)
+    model = new LinearModel(loss, new DenseInstance(Array.fill[Double](numFeatures + 1)(0.0)), numFeatures)
   }
 
   /* Train the model using stochastic gradient descent.
@@ -65,28 +64,25 @@ class SGDLearner(val numFeatures: Int
    */
   override def train(input: DStream[Example]): Unit = {
     input.foreachRDD(rdd => {
-      val chModels = rdd.aggregate(
-        //initialize with the previous model
-        (new LinearModel(loss, model.modelInstance, model.numFeatures), 0.0))(
-        (mod, inst) => {
+      val chModels = rdd.aggregate((new LinearModel(loss, model.modelInstance, model.numFeatures), 0.0))(
+        (modAndRemark, inst) => {
           //for each instance in the RDD,
           //add the gradient and the regularizer and update the model
-          val grad = mod._1.gradient(inst)
-          val reg = mod._1.regularize(regularizer).map(f =>
-            f * regularizerParameter)
+          val grad = modAndRemark._1.gradient(inst)
+          val reg = modAndRemark._1.regularize(regularizer).map(x => x * regularizerParameter)
           val change = grad.add(reg).map(f => f * lambda)
-          (mod._1.update(new Example(change)), 1.0)
+          (modAndRemark._1.update(new Example(change)), 1.0)
         },
-        (mod1, mod2) =>
+        (mod1, mod2) => {
           //add all the models together, keeping the count of the RDDs used
-          (mod1._1.update(new Example(mod2._1.modelInstance)),
-            mod1._2 + mod2._2)
+          (mod1._1.update(new Example(mod2._1.modelInstance)), mod1._2 + mod2._2)
+        }
       )
-      if (chModels._2 > 0)
-      //finally, take the average of the models as the new model
-        model = new LinearModel(loss,
-          chModels._1.modelInstance.map(f => f / chModels._2),
-          model.numFeatures)
+
+      if (chModels._2 > 0) {
+        //finally, take the average of the models as the new model
+        model = new LinearModel(loss, chModels._1.modelInstance.map(f => f / chModels._2), model.numFeatures)
+      }
     })
   }
 
